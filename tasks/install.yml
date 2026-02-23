@@ -29,7 +29,7 @@
     force_source: "{{ browserless_container_image_force_pull if ansible_version.major > 2 or ansible_version.minor >= 8 else omit }}"
     force: "{{ omit if ansible_version.major > 2 or ansible_version.minor >= 8 else browserless_container_image_force_pull }}"
   register: browserless_container_image_pull_result
-  retries: "{{ container_retry_count }}"
+  retries: "{{ container_retry_delay }}"
   delay: "{{ container_retry }}"
   until: browserless_container_image_pull_result is not failed
 
@@ -38,7 +38,7 @@
   ansible.builtin.command:
     cmd: "{{ sysd_docker_host_command }} pull {{ browserless_container_image }}"
   register: browserless_container_image_pull_result
-  retries: "{{ container_retry_count }}"
+  retries: "{{ container_retry_delay }}"
   delay: "{{ container_retry }}"
   until: browserless_container_image_pull_result is not failed
   changed_when: "'Downloaded newer image' in browserless_container_image_pull_result.stdout"
