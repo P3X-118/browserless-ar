@@ -1,12 +1,7 @@
-# SPDX-FileCopyrightText: 2023 Slavi Pantaleev
-# SPDX-FileCopyrightText: 2025 Suguru Hirahara
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 ---
 - name: Check existence of Browserless systemd service
   ansible.builtin.stat:
-    path: "{{ devture_systemd_docker_base_systemd_path }}/{{ browserless_identifier }}.service"
+    path: "{{ sysd_docker_service_path }}/{{ browserless_identifier }}.service"
   register: browserless_service_stat
 
 - name: Uninstall Browserless systemd services and files
@@ -21,27 +16,23 @@
 
     - name: Ensure Browserless systemd service does not exist
       ansible.builtin.file:
-        path: "{{ devture_systemd_docker_base_systemd_path }}/{{ browserless_identifier }}.service"
+        path: "{{ sysd_docker_service_path }}/{{ browserless_identifier }}.service"
         state: absent
 
-    - name: Ensure Browserless container network does not exist
-      when: browserless_container_network_deletion_enabled
-      block:
-        - name: Ensure Browserless container network does not exist via community.docker.docker_network
-          when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
-          community.docker.docker_network:
-            name: "{{ browserless_container_network }}"
-            state: absent
-          register: browserless_network_deletion_result
+    - name: Ensure Browserless container network does not exist via community.docker.docker_network
+      when: sysd_docker_net_creation_method == 'ansible-module'
+      community.docker.docker_network:
+        name: "{{ browserless_container_network }}"
+        state: absent
 
-        - name: Ensure Browserless container network does not exist via ansible.builtin.command
-          when: devture_systemd_docker_base_container_network_creation_method == 'command'
-          ansible.builtin.command:
-            cmd: >-
-              {{ devture_systemd_docker_base_host_command_docker }} network rm
-              {{ browserless_container_network }}
-          register: browserless_network_deletion_result
-          changed_when: browserless_container_network in browserless_network_deletion_result.stdout
+    - name: Ensure Browserless container network does not exist via ansible.builtin.command
+      when: sysd_docker_net_creation_method == 'command'
+      ansible.builtin.command:
+        cmd: >-
+          {{ sysd_docker_host_command }} network rm
+          {{ browserless_container_network }}
+      register: network_deletion_result
+      changed_when: browserless_container_network in network_deletion_result.stdout
 
     - name: Ensure Browserless path does not exist
       ansible.builtin.file:
